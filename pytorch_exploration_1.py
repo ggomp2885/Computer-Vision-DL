@@ -18,7 +18,7 @@
 	                                #Functions for creating NNs
 # class Net(nn.Module):                 # Creates a class of functions
 # 	super().func_name()                 # initiates the nn.module part of the class function
-# self.layername = nn.Linear(input #, output #)        # creates a fully connected layer - For 3 hidden layers, repeat this 4 times because one is the input layer, and then the last hidden and output layer are in one line.
+# self.lay_name = nn.Linear(input #, output #)        # creates a fully connected layer - For 3 hidden layers, repeat this 4 times because one is the input layer, and then the last hidden and output layer are in one line.
 
                                     #Python Functions
 #len(tens_name.shape)                   # returns the “rank” of the tensor
@@ -47,3 +47,51 @@
 # tens_name.mean().item()               # returns a single scalar value
 # tens_name.mean(dim=#).tolist()        # returns a list of values
 # tens_name.mean(dim=#).numpy()         # returns a numpy array of values
+
+
+                                #Example code to create simple FF NN with 3 hidden layers
+# import torch
+# import torch.nn as nn
+# import torch.nn.functional as F
+# import torch.optim as optim
+# 
+# Class Net(nn.Module):
+# def func_name(var_name):
+#     super().func_name()
+#     self.lay_name1 = nn.Linear(input  # , output #)
+#     self.lay_name2 = nn.Linear(input  # , output #)
+#     self.lay_name3 = nn.Linear(input  # , output #)
+#     self.lay_name4 = nn.Linear(input  # , output #)
+# 
+# 
+# def forward(self, var_name1):
+#     var_name = F.act_func(self.lay_name1(var_name1))
+#     var_name = F.act_func(self.lay_name2(var_name1))
+#     var_name = F.act_func(self.lay_name3(var_name1))
+#     var_name = self.lay_name4(var_name1)  ## this maybe unnecessary
+#     return F.loss_func(var_name1, dim=1)
+# 
+# opt_var_name = optim.Adam(net.parameters(), lr=0.001)
+# 
+# EPOCHS = 3
+# for epoch in range(EPOCHS):
+#     for data in trainset:
+#         X, y = data
+#         net.zero_grad()
+#         output = net(X.view(-1, input  # )
+#         loss_var_name = F.loss_func_name(output, y)
+#         loss_var_name.backward()
+#         opt_var_name.step()
+# 
+# measuring accuracy
+#     Correct = 0
+#     Total = 0
+#     with torch.no_grad()
+#         for data in trainset:
+#             X, y = data
+#         Output = net(X.view(-1, 784)
+#             for idx, i in enumerate(output):
+#                 if torch.argmax(i) == y[idx]:
+#                     correct += 1
+#                     total += 1
+#         print(“Accuracy “, round(correct / total, 3))
