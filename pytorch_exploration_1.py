@@ -8,8 +8,8 @@
 # import torch.optim as optim           # optimizer functions
                                 #Functions
                                     #Creating tensors
-# torch.tensor(listname)                # creates tensor with same data type as input (Copy) (Factory)  (Data type is “inferred” based on the incoming data) (Type Inference)
-# torch.as_tensor(listname)             # (Share) (Higher performance at scale because there's only one total instance of the tensor) (Factory) (Data type is “inferred” based on the incoming data) (Type Inference)
+# torch.tensor(list_name)               # creates tensor with same data type inferred from input (Copy) (Factory)
+# torch.as_tensor(list_name)            # (Share) (Higher performance at scale because there's only one total instance of the tensor) (Factory) (Data type is “inferred” based on the incoming data) (Type Inference)
 # torch.eye(#)                          # creates a tensor with the “identity matrix” with # of rows (1’s along the diagonal)
 # torch.zeros(#,#)                      # creates a tensor of shape #,# with all zeros
 # torch.ones(#,#)                       # creates tensor of shape #,# with all one's
@@ -95,3 +95,8 @@
 #                     correct += 1
 #                     total += 1
 #         print(“Accuracy “, round(correct / total, 3))
+
+
+
+                                    # New Torch learning 11/11/20 - Will go back and reorganize
+                                    
