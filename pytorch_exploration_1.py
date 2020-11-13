@@ -191,7 +191,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
                                                     # For FCNN, load as above
                                                     # For CNN, use input_channel=1
                                                     # For RNN, I consider it 28 time stamps, by 28 features, usually you wouldnt use an RNN for images though.
-batch_size = 256
+batch_size = 512
 train_dataset = datasets.MNIST(root='dataset/', train=True, transform=transforms.ToTensor(), download=True)
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 test_dataset = datasets.MNIST(root='dataset/', train=False, transform=transforms.ToTensor(), download=True)
@@ -201,16 +201,16 @@ test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=Tr
                                     # RNN is the umbrella term, more specific types are gru's, and LSTMs, this RNN code can be very simply converted to these types by just changing "RNN" to "GRU" in the layer type. Then you can change the names of the layer, and name of the layer in the forward prop step as well.
 
                                     # Create simple fully connected NN
-# class NN(nn.Module):
-#     def __init__(self, input_size, num_classes):
-#         super(NN, self).__init__()
-#         self.fc1 = nn.Linear(input_size, 50)
-#         self.fc2 = nn.Linear(50, num_classes)
-#
-#     def forward(self, x):
-#         x = F.relu(self.fc1(x))
-#         x = self.fc2(x)
-#         return x
+class NN(nn.Module):
+    def __init__(self, input_size, num_classes):
+        super(NN, self).__init__()
+        self.fc1 = nn.Linear(input_size, 50)
+        self.fc2 = nn.Linear(50, num_classes)
+
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
 
                                     # Create simple Convolutional NN
 # class CNN(nn.Module):
@@ -231,27 +231,27 @@ test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=Tr
 #         return x
                                     # Create simple Recurrent NN - currently setup for bi-directional LSTM
                                         # a Bi-directional LSTM, is nearly the same as a normal LSTM, simply replace variable names for ease of understanding and change 3 things, set bidirectional=True and multiply hidden_size*2 and num_layers*2
-class RNN(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, num_classes):
-        super(RNN, self).__init__()
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, bidirectional=True)
-        self.fc = nn.Linear(hidden_size*2, num_classes)                   # adding hidden_size*sequence_length in the first arg will capture all the data from the hidden states, using just hidden_size, will only capture the information from the last hidden state, which will speed up training time, and can increase/decrease accuracy depending on dataset, since the last state already has second hand information from the previous hidden states.
-
-    def forward(self, x):
-        h0 = torch.zeros(self.num_layers*2, x.size(0), self.hidden_size).to(device)       # num_layers*2 is B-LSTM specific
-        c0 = torch.zeros(self.num_layers*2, x.size(0), self.hidden_size).to(device)       # LSTM specific, num_layers*2 is B-LSTM specific
-
-        # Forward prop
-        out, _ = self.lstm(x, (h0, c0))                                 # for RNN and GRU, this line only holds (x, h0), for the LSTM, it holds (x, (h0, c0))
-        out = self.fc(out[:, -1, :])                                    # captures information from just last hidden state    #acc 93.4, time 240 sec, B-LTSM with same setup had acc 94.0, time 550 sec
-        # out = out.reshape(out.shape[0], -1)                           # captures information from all hidden states         #acc 96.1, time 320 sec
-        # out = self.fc(out)                                            # ^ included in line above
-        return out
+# class RNN(nn.Module):
+#     def __init__(self, input_size, hidden_size, num_layers, num_classes):
+#         super(RNN, self).__init__()
+#         self.hidden_size = hidden_size
+#         self.num_layers = num_layers
+#         self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, bidirectional=True)
+#         self.fc = nn.Linear(hidden_size*2, num_classes)                   # adding hidden_size*sequence_length in the first arg will capture all the data from the hidden states, using just hidden_size, will only capture the information from the last hidden state, which will speed up training time, and can increase/decrease accuracy depending on dataset, since the last state already has second hand information from the previous hidden states.
+#
+#     def forward(self, x):
+#         h0 = torch.zeros(self.num_layers*2, x.size(0), self.hidden_size).to(device)       # num_layers*2 is B-LSTM specific
+#         c0 = torch.zeros(self.num_layers*2, x.size(0), self.hidden_size).to(device)       # LSTM specific, num_layers*2 is B-LSTM specific
+#
+#         # Forward prop
+#         out, _ = self.lstm(x, (h0, c0))                                 # for RNN and GRU, this line only holds (x, h0), for the LSTM, it holds (x, (h0, c0))
+#         out = self.fc(out[:, -1, :])                                    # captures information from just last hidden state    #acc 93.4, time 240 sec, B-LTSM with same setup had acc 94.0, time 550 sec
+#         # out = out.reshape(out.shape[0], -1)                           # captures information from all hidden states         #acc 96.1, time 320 sec
+#         # out = self.fc(out)                                            # ^ included in line above
+#         return out
 
                                     #Checkpoint functions
-def save_checkpoint(state, filename="my_checkpoint.pth.tar"):
+def save_checkpoint(state, filename="my_checkpoint.pt"):             # this will overwrite the file, so for multiple runs, youll want to change this function slightly, or use a new file.
     print("-> Saving Checkpoint")
     torch.save(state, filename)
 
@@ -275,28 +275,28 @@ def load_checkpoint(checkpoint):
 
                                     # Hyperparameters
                                         # General HyperPs
-num_epochs = 1                              # value represents how many times the loop runs to train the model on the same dataset)
+num_epochs = 4                              # value represents how many times the loop runs to train the model on the same dataset)
 num_classes = 10
 learning_rate = .001
-load_model = True                           # for saving results to build on later
+load_model = False                           # for saving results to build on later, cant set to true, until I have loaded data in the file already
                                         # FC HyperPs
-# input_size = 784                            # value represents pixels*pixels
+input_size = 784                            # value represents pixels*pixels
                                         # CNN HyperPs
 # in_channels = 1                             # value represents amount of colors in image
                                         # RNN HyperPs
-input_size = 28
-sequence_length = 28
-num_layers = 2
-hidden_size = 256
+# input_size = 28
+# sequence_length = 28
+# num_layers = 2
+# hidden_size = 256
 
 
                                     # create model, set Optimizer and Loss function
                                         # FC NN
-# model = NN(input_size=input_size, num_classes=num_classes).to(device)
+model = NN(input_size=input_size, num_classes=num_classes).to(device)
                                         # CNN
 # model = CNN().to(device)
                                         # RNN
-model = RNN(input_size, hidden_size, num_layers, num_classes).to(device)
+# model = RNN(input_size, hidden_size, num_layers, num_classes).to(device)
 
                                         # Same for all
 criterion = nn.CrossEntropyLoss()
@@ -322,9 +322,9 @@ for epoch in range(num_epochs):
             # Put data in Cuda if possible
         targets = targets.to(device=device)
 
-        # data = data.to(device=device)               # FC NN and CNN specific
-        data = data.to(device=device).squeeze(1)      # RNN specific
-        # data = data.reshape(data.shape[0],-1)       # FC NN specific      # reshapes the 28,28 into a 784, by "squeezing" to a flat tensor
+        data = data.to(device=device)               # FC NN and CNN specific
+        # data = data.to(device=device).squeeze(1)      # RNN specific
+        data = data.reshape(data.shape[0],-1)       # FC NN specific      # reshapes the 28,28 into a 784, by "squeezing" to a flat tensor
 
             # forward function
         scores = model(data)
@@ -347,9 +347,9 @@ def check_accuracy(loader, model):
 
     with torch.no_grad():
         for x, y in loader:
-            x = x.to(device=device).squeeze(1)               # the .squeeze(1) is RNN specific
+            x = x.to(device=device)#.squeeze(1)               # .squeeze(1) is all RNNs specific
             y = y.to(device=device)
-            # x = x.reshape(x.shape[0], -1)                  # FC NN specific
+            x = x.reshape(x.shape[0], -1)                  # FC NN specific
 
             scores = model(x)
             _, predictions = scores.max(1)
@@ -366,3 +366,5 @@ print(f'Time taken: {end-start:.1f} Seconds')
 
 
 # all these things, batch size, number of epochs, number of layers, have an effect on accuracy,
+# acc 96.9 after 20 epochs of FCNN with batch of 512 in 115 sec
+# acc 97.3 after 40 epochs of FCNN with batch 512, in 240 sec (after loading from 20 above)
