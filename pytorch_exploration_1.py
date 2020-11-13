@@ -9,6 +9,7 @@
                                 #Functions
                                   #many functions can be written explicitly, such as torch.func_name(tens_name) or implicitly as in tens_name.func_name()
                                     #Creating tensors
+# torch.tensor([#,#,#],[#,#,#])         # creates a tensor with rows and columns of the input #s
 # torch.tensor(list_name)               # creates tensor with data type inferred from input (Copy) (Factory)
 # torch.as_tensor(list_name)            # (Share) (Higher performance at scale because there's only one total instance of the tensor) (Factory)
 # torch.eye(#)                          # creates a tensor with the “identity matrix” with # of rows (1’s along the diagonal)
@@ -22,7 +23,7 @@
 
                                     #Manipulating tensors
 # sorted_tens_1, indices = torch.sort(tens_1, descending=False)
-# torch.where(tens_>#, tens_, tens_*2)  # finds where values > #, sets value = to middle value, where this is not true, does 3rd operation
+# torch.where(tens_>#, tens_, tens_*2)  # like a small lambda function, finds where values > #, sets value = to middle value, where this is not true, does 3rd operation
 # tens_name.permute(#,#,#)              # switches the shape of the tensor around, using the orginal index values. IE, if you wanted a tensor of shape (50, 25, 30) to be (30, 25, 50) in this function you would input (2, 1, 0) # .t() is for ease of use, with only 2 dimensional tensors.
 # tens_name.squeeze(#)                  # removes a dimension from a tensor, number here is the index of the dimension you want to remove.
 # tens_name.unsqueeze(#)                # adds a dimension to a tensor, number here is the index where the new dimension should be placed, either infront or behind the indexes of the current dimensions.
@@ -49,7 +50,8 @@
                                 # Indexing tensors
 # tens_name[#]                          # returns entire row
 # tens_name[:,#]                        # returns entire column
-# tens_name[(tens_name ># | tens_name <#    # returns elements above OR below these #s, can also use the & sign here
+# tens_name[(tens_name > # | tens_name < #    # returns elements above OR below these #s, can also use the & sign here
+
                                 # Basic Tensor Math Operations
                                     # I can add a _ after any of these functions to do these operations, "in place," which takes less time and memory
                                     # broadcasting is a built-in feature for ease of use which allows you to do operations between tensors of different sizes
@@ -63,7 +65,7 @@
 # tens_name.argmax()                    # returns index of max value of the elements. index value returned is as if the function was flattened to a 1D array.
 # tens_name.argmin()                    # returns index of min value of the elements. index value returned is as if the function was flattened to a 1D array.
 # tens_name.unique()                    # returns the unique values of the tensor
-# tens_name_1 += tens_name_2            # Easiest way to write ASDM functions in place
+# tens_name_1 += tens_name_2            # Easiest way to write Add/Subtract/Multiply/Divide, in place
 # tens_name < #                         # returns a tensor containing all elements less than this #
 # tens_name ** #                        # raises all elements by this power
 # tens_name.mm(tens_name_2)             # raises all elements by the element wise numbers in another matrix
@@ -71,13 +73,13 @@
 # tens_name.clamp(max=#)                # sets all elements above this #, to this #, can also use min=# here
 # tens_name.abs()                       # returns the absolute value of each element
 # tens_name.any()                       # returns true if any values are true
-# tens_name.all(tens_name)              # returns true if all values are true
+# tens_name.all()                       # returns true if all values are true
 # tens_name_1.dot(tens_name_2)          # dot product (multiples matrices together and adds all elements to return one single value).
 # torch.eq(tens_name_1, tens_name_2)    # (explicit example) returns a boolean tensor where elements of two tensors are equal
 # longer setup                          # can also do "batch multiplication" which is like "multiple" multiplication in one, not sure where Id end up using this though
 
 	                                #Functions for creating NNs
-# class Net(nn.Module):                 # Creates a class of functions
+# class cls_name(nn.Module):                 # Creates a class of functions
 # 	  super().func_name()                 # initiates the nn.module part of the class function
 #     self.lay_name_1 = nn.Linear(input #, output #)        # creates a fully connected layer - For 3 hidden layers, repeat this 4 times, because the first is the input layer, and the last line contains the hidden layer, and the output layer.
 #     self.lay_name_2 = nn.Linear(input #, output #)        # creates a fully connected layer
@@ -176,21 +178,27 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
-from timeit import default_timer as timer
 from torch.utils.data import DataLoader
+from timeit import default_timer as timer
+
 
 start = timer()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 #Loading in MNIST Train and Test datasets from torchvision.datasets
-batch_size = 64
+# MNIST dataset shape = batch_size, colors=1, 28 pixels, 28 pixels
+                                                    # For FCNN, load as above
+                                                    # For CNN, use input_channel=1
+                                                    # For RNN, I consider it 28 time stamps, by 28 features, usually you wouldnt use an RNN for images though.
+batch_size = 256
 train_dataset = datasets.MNIST(root='dataset/', train=True, transform=transforms.ToTensor(), download=True)
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 test_dataset = datasets.MNIST(root='dataset/', train=False, transform=transforms.ToTensor(), download=True)
 test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=True)
 
-
+                                    #General notes about NN types:
+                                    # RNN is the umbrella term, more specific types are gru's, and LSTMs, this RNN code can be very simply converted to these types by just changing "RNN" to "GRU" in the layer type. Then you can change the names of the layer, and name of the layer in the forward prop step as well.
 
                                     # Create simple fully connected NN
 # class NN(nn.Module):
@@ -205,24 +213,55 @@ test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=Tr
 #         return x
 
                                     # Create simple Convolutional NN
-class CNN(nn.Module):
-    def __init__(self, in_channels = 1, num_classes=10):
-        super(CNN, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=8, kernel_size=(3,3), stride=(1,1), padding=(1,1)) # these last 3 arguments are chosen based on a simple formula which feeds the output of this layer into the next layer with the same dimensions
-        self.pool = nn.MaxPool2d(kernel_size=(2,2), stride = (2,2))
-        self.conv2 = nn.Conv2d(in_channels=8, out_channels=16, kernel_size=(3,3), stride=(1,1), padding=(1,1))
-        self.fc1 = nn.Linear(16*7*7, num_classes)
+# class CNN(nn.Module):
+#     def __init__(self, in_channels = 1, num_classes=10):
+#         super(CNN, self).__init__()
+#         self.conv1 = nn.Conv2d(in_channels=1, out_channels=8, kernel_size=(3,3), stride=(1,1), padding=(1,1)) # these last 3 arguments are chosen based on a simple formula which feeds the output of this layer into the next layer with the same dimensions
+#         self.pool = nn.MaxPool2d(kernel_size=(2,2), stride = (2,2))
+#         self.conv2 = nn.Conv2d(in_channels=8, out_channels=16, kernel_size=(3,3), stride=(1,1), padding=(1,1))
+#         self.fc1 = nn.Linear(16*7*7, num_classes)
+#
+#     def forward(self, x):
+#         x = F.relu(self.conv1(x))
+#         x = self.pool(x)
+#         x = F.relu(self.conv2(x))
+#         x = self.pool(x)
+#         x = x.reshape(x.shape[0],-1)
+#         x = self.fc1(x)
+#         return x
+                                    # Create simple Recurrent NN - currently setup for bi-directional LSTM
+                                        # a Bi-directional LSTM, is nearly the same as a normal LSTM, simply replace variable names for ease of understanding and change 3 things, set bidirectional=True and multiply hidden_size*2 and num_layers*2
+class RNN(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers, num_classes):
+        super(RNN, self).__init__()
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, bidirectional=True)
+        self.fc = nn.Linear(hidden_size*2, num_classes)                   # adding hidden_size*sequence_length in the first arg will capture all the data from the hidden states, using just hidden_size, will only capture the information from the last hidden state, which will speed up training time, and can increase/decrease accuracy depending on dataset, since the last state already has second hand information from the previous hidden states.
 
     def forward(self, x):
-        x = F.relu(self.conv1(x))
-        x = self.pool(x)
-        x = F.relu(self.conv2(x))
-        x = self.pool(x)
-        x = x.reshape(x.shape[0],-1)
-        x = self.fc1(x)
-        return x
+        h0 = torch.zeros(self.num_layers*2, x.size(0), self.hidden_size).to(device)       # num_layers*2 is B-LSTM specific
+        c0 = torch.zeros(self.num_layers*2, x.size(0), self.hidden_size).to(device)       # LSTM specific, num_layers*2 is B-LSTM specific
 
-                                    # shape tests of model output with mock data
+        # Forward prop
+        out, _ = self.lstm(x, (h0, c0))                                 # for RNN and GRU, this line only holds (x, h0), for the LSTM, it holds (x, (h0, c0))
+        out = self.fc(out[:, -1, :])                                    # captures information from just last hidden state    #acc 93.4, time 240 sec, B-LTSM with same setup had acc 94.0, time 550 sec
+        # out = out.reshape(out.shape[0], -1)                           # captures information from all hidden states         #acc 96.1, time 320 sec
+        # out = self.fc(out)                                            # ^ included in line above
+        return out
+
+                                    #Checkpoint functions
+def save_checkpoint(state, filename="my_checkpoint.pth.tar"):
+    print("-> Saving Checkpoint")
+    torch.save(state, filename)
+
+def load_checkpoint(checkpoint):
+    print("-> Loading Checkpoint")
+    model.load_state_dict(checkpoint['state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer'])
+
+
+# shape tests of model output with mock data
                                         #FC NN
 # model = NN(784,10)
 # x = torch.random(64, 784)             # first # is the # of rows, 2nd is the # of features
@@ -236,39 +275,64 @@ class CNN(nn.Module):
 
                                     # Hyperparameters
                                         # General HyperPs
-num_epochs = 5                              # value represents how many times the loop runs to train the model on the same dataset)
+num_epochs = 1                              # value represents how many times the loop runs to train the model on the same dataset)
 num_classes = 10
 learning_rate = .001
+load_model = True                           # for saving results to build on later
                                         # FC HyperPs
-# input_size = 784
+# input_size = 784                            # value represents pixels*pixels
                                         # CNN HyperPs
-in_channels = 1                             # value represents amount of colors in image
+# in_channels = 1                             # value represents amount of colors in image
+                                        # RNN HyperPs
+input_size = 28
+sequence_length = 28
+num_layers = 2
+hidden_size = 256
 
 
-                                    # Model build, Optimizer, and Loss function
+                                    # create model, set Optimizer and Loss function
                                         # FC NN
 # model = NN(input_size=input_size, num_classes=num_classes).to(device)
                                         # CNN
-model = CNN().to(device)
+# model = CNN().to(device)
+                                        # RNN
+model = RNN(input_size, hidden_size, num_layers, num_classes).to(device)
 
+                                        # Same for all
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
+                                        #also part of the save and load function
+if load_model:
+    load_checkpoint(torch.load("my_checkpoint.pth.tar"))
+
+
                                     # NN Training loop
 for epoch in range(num_epochs):
+                                        # part of the save and load function
+    losses = []
+
+    if epoch % 2:
+        checkpoint = {'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict()}
+        save_checkpoint(checkpoint)
+
+
     for batch_idx, (data, targets) in enumerate(train_loader):      # this fancier for loop just gives the index for each epoch your in
-        # Put data in Cuda if possible
-        data = data.to(device=device)
+
+            # Put data in Cuda if possible
         targets = targets.to(device=device)
-                                        # FC NN specific
-#        data = data.reshape(data.shape[0],-1)                       # reshapes the 28,28 into a 784, by "squeezing" the input to a flat tensor
-        # forward function
+
+        # data = data.to(device=device)               # FC NN and CNN specific
+        data = data.to(device=device).squeeze(1)      # RNN specific
+        # data = data.reshape(data.shape[0],-1)       # FC NN specific      # reshapes the 28,28 into a 784, by "squeezing" to a flat tensor
+
+            # forward function
         scores = model(data)
         loss = criterion(scores, targets)
-        # backward function
+            # backward function
         optimizer.zero_grad()
         loss.backward()
-        # gradient descent function
+            # gradient descent function
         optimizer.step()
 
 # Check Accuracy
@@ -283,10 +347,9 @@ def check_accuracy(loader, model):
 
     with torch.no_grad():
         for x, y in loader:
-            x = x.to(device=device)
+            x = x.to(device=device).squeeze(1)               # the .squeeze(1) is RNN specific
             y = y.to(device=device)
-                                        # FC NN specific
-#            x = x.reshape(x.shape[0], -1)
+            # x = x.reshape(x.shape[0], -1)                  # FC NN specific
 
             scores = model(x)
             _, predictions = scores.max(1)
@@ -300,5 +363,6 @@ check_accuracy(test_loader, model)
 
 end = timer()
 print(f'Time taken: {end-start:.1f} Seconds')
-# test Acc with  epochs and batch size of 128 = 94.88
-# test Acc with 3 epochs and batch size of 32 = 96.19
+
+
+# all these things, batch size, number of epochs, number of layers, have an effect on accuracy,
