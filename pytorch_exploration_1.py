@@ -202,7 +202,7 @@ torch.backends.cudnn.benchmark = False
                                                         # For FCNN, load as above
                                                         # For CNN, use input_channel=1
                                                         # For RNN, I consider it 28 time stamps, by 28 features, usually you wouldnt use an RNN for images though.
-batch_size = 512
+batch_size = 1024
 train_dataset = datasets.MNIST(root='dataset/', train=True, transform=transforms.ToTensor(), download=True)
 test_dataset = datasets.MNIST(root='dataset/', train=False, transform=transforms.ToTensor(), download=True)
 
@@ -313,7 +313,7 @@ if load_model:
 
                                     # Hyperparameters
                                         # General HyperPs
-num_epochs = 2                              # value represents how many times the loop runs to train the model on the same dataset)
+num_epochs = 4                              # value represents how many times the loop runs to train the model on the same dataset)
 num_classes = 10
 learning_rate = .001
                                         # FC HyperPs
@@ -337,6 +337,7 @@ model = NN(input_size=input_size, num_classes=num_classes).to(device)        # F
                                         # Same for all
 criterion = nn.CrossEntropyLoss()                       # This line already contains, softmax, and negative log likelyhood
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=.1, patience=5, verbose=True)
                                         # For testing your NN on a single batch, add this line, and remove the (in enumerate) loop in the training loop.
 data, targets = next(iter(train_loader))                # This line is for testing your NN on a single batch, you also comment out the for loop in the training loop, and "de-dent" the following lines
 
@@ -348,25 +349,34 @@ for epoch in range(num_epochs):
         checkpoint = {'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict()}
         save_checkpoint(checkpoint)
     loop = tqdm(enumerate(train_loader), total=len(train_loader), leave=False)
-    for batch_idx, (data, targets) in loop:            # this is the loop that iterates over all batches, and the in enumerate part gives the index for each epoch
+    for batch_idx, (data, targets) in loop:                # this is the loop that iterates over all batches, and the in enumerate part gives the index for each epoch
             # Put data in Cuda if possible
         targets = targets.to(device=device)
         data = data.to(device=device)               # FC NN and CNN specific
-        # data = data.to(device=device).squeeze(1)      # RNN specific
+        # data = data.to(device=device).squeeze(1)  # RNN specific
         data = data.reshape(data.shape[0],-1)       # FC NN specific      # reshapes the 28,28 into a 784, by "squeezing" to a flat tensor
 
             # forward function
         scores = model(data)
         loss = criterion(scores, targets)
+        losses.append(loss.item())                         # for use in calculating the loss per epoch
+
             # backward function
         optimizer.zero_grad()                                             # this line tells the network to sum the gradient of each batch, individually, then add it to the total, much higher accuracy this way
         loss.backward()
         # torch.nn.utils.clip_grad_norm(model.parameters(), max_norm=1)   # this line works well with RNNs
+
             # gradient descent function
         optimizer.step()
-        # progress bar updates
+
+            # progress bar updates
         loop.set_description(f'Epoch [{epoch}/{num_epochs}]')
-        loop.set_postfix(loss = loss.item(), acc=torch.rand(1).item())      # The accuracy here is set to random right now
+        loop.set_postfix(loss = loss.item(), acc=torch.rand(1).item()) # The accuracy here is set to random right now
+
+        mean_loss = sum(losses)/len(losses)
+        scheduler.step(mean_loss)
+        print(f'Loss at epoch {epoch} is {mean_loss}')
+
 
 # Check Accuracy
 def check_accuracy(loader, model):
