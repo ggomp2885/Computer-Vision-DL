@@ -171,7 +171,8 @@
 
 
                                                 # EXAMPLE CODE OF 3 Layer NN for MNIST CV
-                                                    # Contains: Imports, create NN, hyperparams, loading data, initalize NN, Loss and Optimizer, training, accuracy check
+                                                    # Contains: Imports, loading data, create NN, hyperparams, initalize NN, Loss and Optimizer, training, accuracy check
+import sys
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -180,25 +181,35 @@ import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from timeit import default_timer as timer
+from tqdm import tqdm
 
 
 start = timer()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-#Loading in MNIST Train and Test datasets from torchvision.datasets
-# MNIST dataset shape = batch_size, colors=1, 28 pixels, 28 pixels
-                                                    # For FCNN, load as above
-                                                    # For CNN, use input_channel=1
-                                                    # For RNN, I consider it 28 time stamps, by 28 features, usually you wouldnt use an RNN for images though.
+                                                    #Loading in MNIST Train and Test datasets from torchvision.datasets
+                                                        # MNIST dataset shape = batch_size, colors=1, 28 pixels, 28 pixels
+                                                        # datasets for images can have 2 different import files, one for the png images, the other, a csv for the labels of the images.
+                                                        # Depending on the objects your looking to detect, it can increase accuracy to apply a bunch of random transforms to the image, such as 5% of grayscale, 5% of 45 degree rotation, resize the image up 10%, crop it down 10%, random saturation 5%, etc. In this way it learns to really understand the relationships that make up an object, in less than ideal cases. But keep in mind, if you wouldnt recognize it, with the transforms, than the net probably shouldnt be trained like this, for example a 100% vertical flip on a digit, actually changes what digit it is, so more is not better at this point.
+                                                        # For FCNN, load as above
+                                                        # For CNN, use input_channel=1
+                                                        # For RNN, I consider it 28 time stamps, by 28 features, usually you wouldnt use an RNN for images though.
 batch_size = 512
 train_dataset = datasets.MNIST(root='dataset/', train=True, transform=transforms.ToTensor(), download=True)
-train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 test_dataset = datasets.MNIST(root='dataset/', train=False, transform=transforms.ToTensor(), download=True)
+
+train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=True)
 
+# my_transforms = transforms.Compose([
+#                     transforms.ToTensor(),
+#                     transforms.Normalize(mean=(.55), std=(1.2))    # This step increases accuracy of the majority of datasets, even MNIST)
+# ])
+
                                     #General notes about NN types:
-                                    # RNN is the umbrella term, more specific types are gru's, and LSTMs, this RNN code can be very simply converted to these types by just changing "RNN" to "GRU" in the layer type. Then you can change the names of the layer, and name of the layer in the forward prop step as well.
+                                        # RNN is the umbrella term, more specific types are gru's, and LSTMs, this RNN code can be very simply converted to these types by just changing "RNN" to "GRU" in the layer type. Then you can change the layer name in the NN function in 2 places as well.
+                                        # No need to create this class if you're using a prebuilt model, simply set model = prebuilt_name(arg, arg, arg) down below
 
                                     # Create simple fully connected NN
 class NN(nn.Module):
@@ -260,12 +271,19 @@ def load_checkpoint(checkpoint):
     model.load_state_dict(checkpoint['state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer'])
 
+load_model = False                          # for saving results to build on later, cant set to true, until I have loaded data in the file already
+
+if load_model:
+    load_checkpoint(torch.load("my_checkpoint.pth.tar"))
+
+                                    #Loading a pre-trained model
+
 
 # shape tests of model output with mock data
                                         #FC NN
 # model = NN(784,10)
-# x = torch.random(64, 784)             # first # is the # of rows, 2nd is the # of features
-# print(model(x).shape)                 # checks that the output is correct
+# x = torch.random(64, 784)                # first # is the # of rows, 2nd is the # of features
+# print(model(x).shape)                    # checks that the output is correct
                                         #CNN
 # model = CNN()
 # x = torch.randn(64, 1, 28, 28)
@@ -275,10 +293,9 @@ def load_checkpoint(checkpoint):
 
                                     # Hyperparameters
                                         # General HyperPs
-num_epochs = 4                              # value represents how many times the loop runs to train the model on the same dataset)
+num_epochs = 2                              # value represents how many times the loop runs to train the model on the same dataset)
 num_classes = 10
 learning_rate = .001
-load_model = False                           # for saving results to build on later, cant set to true, until I have loaded data in the file already
                                         # FC HyperPs
 input_size = 784                            # value represents pixels*pixels
                                         # CNN HyperPs
@@ -291,37 +308,29 @@ input_size = 784                            # value represents pixels*pixels
 
 
                                     # create model, set Optimizer and Loss function
-                                        # FC NN
-model = NN(input_size=input_size, num_classes=num_classes).to(device)
-                                        # CNN
-# model = CNN().to(device)
-                                        # RNN
-# model = RNN(input_size, hidden_size, num_layers, num_classes).to(device)
+                                        #torch.torchvision.prebuilt_model_name(arg, arg, arg) contains alot of prebuilt NN structures
+
+model = NN(input_size=input_size, num_classes=num_classes).to(device)        # FC NN
+# model = CNN().to(device)                                                   # CNN
+# model = RNN(input_size, hidden_size, num_layers, num_classes).to(device)   # RNN
 
                                         # Same for all
-criterion = nn.CrossEntropyLoss()
+criterion = nn.CrossEntropyLoss()                       # This line already contains, softmax, and negative log likelyhood
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-
-                                        #also part of the save and load function
-if load_model:
-    load_checkpoint(torch.load("my_checkpoint.pth.tar"))
-
+                                        # For testing your NN on a single batch, add this line, and remove the (in enumerate) loop in the training loop.
+data, targets = next(iter(train_loader))                # This line is for testing your NN on a single batch, you also comment out the for loop in the training loop, and "de-dent" the following lines
 
                                     # NN Training loop
 for epoch in range(num_epochs):
-                                        # part of the save and load function
     losses = []
-
+                                        # part of the save and load function
     if epoch % 2:
         checkpoint = {'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict()}
         save_checkpoint(checkpoint)
-
-
-    for batch_idx, (data, targets) in enumerate(train_loader):      # this fancier for loop just gives the index for each epoch your in
-
+    loop = tqdm(enumerate(train_loader), total=len(train_loader), leave=False):
+    for batch_idx, (data, targets) in loop            # this is the loop that iterates over all batches, and the in enumerate part gives the index for each epoch
             # Put data in Cuda if possible
         targets = targets.to(device=device)
-
         data = data.to(device=device)               # FC NN and CNN specific
         # data = data.to(device=device).squeeze(1)      # RNN specific
         data = data.reshape(data.shape[0],-1)       # FC NN specific      # reshapes the 28,28 into a 784, by "squeezing" to a flat tensor
@@ -330,10 +339,14 @@ for epoch in range(num_epochs):
         scores = model(data)
         loss = criterion(scores, targets)
             # backward function
-        optimizer.zero_grad()
+        optimizer.zero_grad()                                             # this line tells the network to sum the gradient of each batch, individually, then add it to the total, much higher accuracy this way
         loss.backward()
+        # torch.nn.utils.clip_grad_norm(model.parameters(), max_norm=1)   # this line works well with RNNs
             # gradient descent function
         optimizer.step()
+        # progress bar updates
+        loop.set_description(f'Epoch [{epoch}/{num_epochs}]')
+        loop.set_postfix(loss = loss.item(), acc=torch.rand(1).item())      # The accuracy here is set to random right now
 
 # Check Accuracy
 def check_accuracy(loader, model):
