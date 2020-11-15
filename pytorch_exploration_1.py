@@ -173,6 +173,7 @@
                                                 # EXAMPLE CODE OF 3 Layer NN for MNIST CV
                                                     # Contains: Imports, loading data, create NN, hyperparams, initalize NN, Loss and Optimizer, training, accuracy check
 import sys
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -186,7 +187,13 @@ from tqdm import tqdm
 
 start = timer()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+                                                    # Deterministic behavior (only use when comparing results/debugging because it slows the training time of NN)
+seed = 42
+torch.manual_seed(seed)
+np.random.seed(seed)
+torch.cuda.manual_seed_all(seed)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 
                                                     #Loading in MNIST Train and Test datasets from torchvision.datasets
                                                         # MNIST dataset shape = batch_size, colors=1, 28 pixels, 28 pixels
@@ -202,10 +209,23 @@ test_dataset = datasets.MNIST(root='dataset/', train=False, transform=transforms
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=True)
 
-# my_transforms = transforms.Compose([
+# my_transforms = transforms.Compose([                                 # create list of data transforms
 #                     transforms.ToTensor(),
-#                     transforms.Normalize(mean=(.55), std=(1.2))    # This step increases accuracy of the majority of datasets, even MNIST)
-# ])
+#                     transforms.Normalize(mean=(.55), std=(1.2))])    # This step increases accuracy of the majority of datasets, even MNIST)
+
+def get_mean_std(loader):
+    channels_sum, channels_squared_sum, num_batches = 0, 0, 0
+    for data, _ in loader:
+        channels_sum += torch.mean(data, dim=[0,2,3])
+        channels_squared_sum += torch.mean(data**2, dim=[0,2,3])
+        num_batches += 1
+    mean = channels_sum/num_batches
+    std = (channels_squared_sum/num_batches - mean**2)**0.5
+    return mean, std
+
+mean, std = get_mean_std(train_loader)
+print(mean)
+print(std)
 
                                     #General notes about NN types:
                                         # RNN is the umbrella term, more specific types are gru's, and LSTMs, this RNN code can be very simply converted to these types by just changing "RNN" to "GRU" in the layer type. Then you can change the layer name in the NN function in 2 places as well.
@@ -327,8 +347,8 @@ for epoch in range(num_epochs):
     if epoch % 2:
         checkpoint = {'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict()}
         save_checkpoint(checkpoint)
-    loop = tqdm(enumerate(train_loader), total=len(train_loader), leave=False):
-    for batch_idx, (data, targets) in loop            # this is the loop that iterates over all batches, and the in enumerate part gives the index for each epoch
+    loop = tqdm(enumerate(train_loader), total=len(train_loader), leave=False)
+    for batch_idx, (data, targets) in loop:            # this is the loop that iterates over all batches, and the in enumerate part gives the index for each epoch
             # Put data in Cuda if possible
         targets = targets.to(device=device)
         data = data.to(device=device)               # FC NN and CNN specific
