@@ -1,0 +1,58 @@
+NN: FCNN, Batch Size: 1024, Epochs: 1, Normalized: True
+Got 49025 / 60000 with accuracy of 81.71
+Got 8049 / 10000 with accuracy of 80.49
+Time taken: 19.6 Seconds
+NN: FCNN, Batch Size: 16, Epochs: 20, Normalized: True
+Got 55753 / 60000 with accuracy of 92.92
+Got 8760 / 10000 with accuracy of 87.60
+Time taken: 330.1 Seconds
+FCNN, Batch Size: 16, Epochs: 1, Normalized: True
+Got 51781 / 60000 with accuracy of 86.30
+Got 8442 / 10000 with accuracy of 84.42
+Time taken: 26.8 Seconds
+-------------------------------------------------------------------
+CNN, Batch Size: 1024, Epochs: 1, Normalized: True, Extra config:
+Got 45887 / 60000 with accuracy of 76.48
+Got 7565 / 10000 with accuracy of 75.65
+Time taken: 42.2 Seconds
+-------------------------------------------------------------------
+CNN, Batch Size: 16, Epochs: 10, Normalized: True, Extra config: 
+Got 55764 / 60000 with accuracy of 92.94
+Got 9051 / 10000 with accuracy of 90.51
+Time taken: 291.7 Seconds
+-------------------------------------------------------------------
+CNN, Batch Size: 16, Epochs: 1, Normalized: True, Extra config: clip_grad_norm
+Got 52829 / 60000 with accuracy of 88.05
+Got 8683 / 10000 with accuracy of 86.83
+Time taken: 50.2 Seconds
+-------------------------------------------------------------------
+CNN, Batch Size: 16, Epochs: 1, Normalized: True, Extra config: 
+Got 52777 / 60000 with accuracy of 87.96
+Got 8688 / 10000 with accuracy of 86.88
+Time taken: 45.9 Seconds
+-------------------------------------------------------------------
+CNN, Batch Size: 16, Epochs: 1, Normalized: True, Extra config: 
+Got 52777 / 60000 with accuracy of 87.96
+Got 8688 / 10000 with accuracy of 86.88
+Time taken: 45.6 Seconds
+-------------------------------------------------------------------
+CNN, Batch Size: 16, Epochs: 3, Normalized: True, Extra config: 
+Got 54495 / 60000 with accuracy of 90.83
+Got 8917 / 10000 with accuracy of 89.17
+Time taken: 101.9 Seconds
+-------------------------------------------------------------------
+CNN, Batch Size: 16, Epochs: 3, Normalized: True, Extra config: clip_grad_norm
+Got 54399 / 60000 with accuracy of 90.66
+Got 8929 / 10000 with accuracy of 89.29
+Time taken: 106.0 Seconds
+-------------------------------------------------------------------
+LSTM, Batch Size: 1024, Epochs: 3, Normalized: True, Extra config:
+Got 51964 / 60000 with accuracy of 86.61
+Got 8545 / 10000 with accuracy of 85.45
+Time taken: 531.0 Seconds
+-------------------------------------------------------------------
+CNN, Batch Size: 1024, Epochs: 1, Normalized: True, Parameters: 9098, Extra config: 
+Got 45887 / 60000 with accuracy of 76.48
+Got 7565 / 10000 with accuracy of 75.65
+Time taken: 36.3 Seconds
+-------------------------------------------------------------------

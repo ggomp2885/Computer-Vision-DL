@@ -170,6 +170,13 @@
 # print(np_back.type)
 
 
+
+
+
+
+
+
+
                                                 # EXAMPLE CODE OF 3 Layer NN for MNIST CV
                                                     # Contains: Imports, loading data, create NN, hyperparams, initalize NN, Loss and Optimizer, training, accuracy check
 import sys
@@ -202,11 +209,11 @@ torch.backends.cudnn.benchmark = False
                                                         # For FCNN, load as above
                                                         # For CNN, use input_channel=1
                                                         # For RNN, I consider it 28 time stamps, by 28 features, usually you wouldnt use an RNN for images though.
-batch_size = 1024
-
 my_transforms = transforms.Compose([                                 # create list of data transforms
                     transforms.ToTensor(),
-                    transforms.Normalize(mean=(.286), std=(.353))])    # This step increases accuracy of the majority of datasets, even MNIST)
+                    transforms.Normalize(mean=(.2860), std=(.3530))])    # This step increases accuracy of the majority of datasets, even MNIST)
+normalized = True
+batch_size = 1024
 
 train_dataset = datasets.FashionMNIST(root='fashion_dataset/', train=True, transform=my_transforms, download=True)
 test_dataset = datasets.FashionMNIST(root='fashion_dataset/', train=False, transform=my_transforms, download=True)
@@ -214,6 +221,20 @@ test_dataset = datasets.FashionMNIST(root='fashion_dataset/', train=False, trans
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=True)
 
+                                                    # Hyperparameters
+                                                        # General HyperPs
+num_epochs = 1                                              # value represents how many times the loop runs to train the model on the same dataset)
+num_classes = 10
+learning_rate = .001
+                                                        # FC HyperPs
+# input_size = 784                                          # value represents pixels*pixels
+                                                        # CNN HyperPs
+in_channels = 1                                             # value represents amount of colors in image
+                                                        # RNN HyperPs
+# input_size = 28
+# sequence_length = 28
+# num_layers = 2
+# hidden_size = 256
 
 
 # def get_mean_std(loader):
@@ -235,53 +256,57 @@ test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=Tr
                                         # No need to create this class if you're using a prebuilt model, simply set model = prebuilt_name(arg, arg, arg) down below
 
                                     # Create simple fully connected NN
-class NN(nn.Module):
-    def __init__(self, input_size, num_classes):
-        super(NN, self).__init__()
-        self.fc1 = nn.Linear(input_size, 50)
-        self.fc2 = nn.Linear(50, num_classes)
-
-    def forward(self, x):
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
-        return x
-
-                                    # Create simple Convolutional NN
-# class CNN(nn.Module):
-#     def __init__(self, in_channels = 1, num_classes=10):
-#         super(CNN, self).__init__()
-#         self.conv1 = nn.Conv2d(in_channels=1, out_channels=8, kernel_size=(3,3), stride=(1,1), padding=(1,1)) # these last 3 arguments are chosen based on a simple formula which feeds the output of this layer into the next layer with the same dimensions
-#         self.pool = nn.MaxPool2d(kernel_size=(2,2), stride = (2,2))
-#         self.conv2 = nn.Conv2d(in_channels=8, out_channels=16, kernel_size=(3,3), stride=(1,1), padding=(1,1))
-#         self.fc1 = nn.Linear(16*7*7, num_classes)
+# nn_name = 'FCNN'
+# class NN(nn.Module):
+#     def __init__(self, input_size, num_classes):
+#         super(NN, self).__init__()
+#         self.fc1 = nn.Linear(input_size, 50)
+#         self.fc2 = nn.Linear(50, num_classes)
 #
 #     def forward(self, x):
-#         x = F.relu(self.conv1(x))
-#         x = self.pool(x)
-#         x = F.relu(self.conv2(x))
-#         x = self.pool(x)
-#         x = x.reshape(x.shape[0],-1)
-#         x = self.fc1(x)
+#         x = F.relu(self.fc1(x))
+#         x = self.fc2(x)
 #         return x
-                                    # Create simple Recurrent NN - currently setup for bi-directional LSTM
+
+                                    # Create simple Convolutional NN
+
+nn_name = 'CNN'
+class CNN(nn.Module):
+    def __init__(self, in_channels = 1, num_classes=10):
+        super(CNN, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=8, kernel_size=(3,3), stride=(1,1), padding=(1,1)) # these last 3 arguments are chosen based on a simple formula which feeds the output of this layer into the next layer with the same dimensions
+        self.pool = nn.MaxPool2d(kernel_size=(2,2), stride = (2,2))
+        self.conv2 = nn.Conv2d(in_channels=8, out_channels=16, kernel_size=(3,3), stride=(1,1), padding=(1,1))
+        self.fc1 = nn.Linear(16*7*7, num_classes)
+
+    def forward(self, x):
+        x = F.relu(self.conv1(x))
+        x = self.pool(x)
+        x = F.relu(self.conv2(x))
+        x = self.pool(x)
+        x = x.reshape(x.shape[0], -1)
+        x = self.fc1(x)
+        return x
+                                    # Create simple Recurrent NN - currently setup for normal LSTM, can be setup for a bidirectional LSTM, and a GRU
                                         # a Bi-directional LSTM, is nearly the same as a normal LSTM, simply replace variable names for ease of understanding and change 3 things, set bidirectional=True and multiply hidden_size*2 and num_layers*2
+# nn_name = 'RNN'
 # class RNN(nn.Module):
 #     def __init__(self, input_size, hidden_size, num_layers, num_classes):
 #         super(RNN, self).__init__()
 #         self.hidden_size = hidden_size
 #         self.num_layers = num_layers
-#         self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, bidirectional=True)
-#         self.fc = nn.Linear(hidden_size*2, num_classes)                   # adding hidden_size*sequence_length in the first arg will capture all the data from the hidden states, using just hidden_size, will only capture the information from the last hidden state, which will speed up training time, and can increase/decrease accuracy depending on dataset, since the last state already has second hand information from the previous hidden states.
+#         self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True) #bidirectional=True
+#         self.fc = nn.Linear(hidden_size*sequence_length, num_classes)                   # adding hidden_size*sequence_length in the first arg will capture all the data from the hidden states, using just hidden_size, will only capture the information from the last hidden state, which will speed up training time, and can increase/decrease accuracy depending on dataset, since the last state already has second hand information from the previous hidden states.
 #
 #     def forward(self, x):
-#         h0 = torch.zeros(self.num_layers*2, x.size(0), self.hidden_size).to(device)       # num_layers*2 is B-LSTM specific
-#         c0 = torch.zeros(self.num_layers*2, x.size(0), self.hidden_size).to(device)       # LSTM specific, num_layers*2 is B-LSTM specific
+#         h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(device)       # num_layers*2 is B-LSTM specific
+#         c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(device)       # LSTM specific, num_layers*2 is B-LSTM specific
 #
 #         # Forward prop
 #         out, _ = self.lstm(x, (h0, c0))                                 # for RNN and GRU, this line only holds (x, h0), for the LSTM, it holds (x, (h0, c0))
-#         out = self.fc(out[:, -1, :])                                    # captures information from just last hidden state    #acc 93.4, time 240 sec, B-LTSM with same setup had acc 94.0, time 550 sec
-#         # out = out.reshape(out.shape[0], -1)                           # captures information from all hidden states         #acc 96.1, time 320 sec
-#         # out = self.fc(out)                                            # ^ included in line above
+#         # out = self.fc(out[:, -1, :])                                    # captures information from just last hidden state    #acc 93.4, time 240 sec, B-LTSM with same setup had acc 94.0, time 550 sec
+#         out = out.reshape(out.shape[0], -1)                           # captures information from all hidden states         #acc 96.1, time 320 sec
+#         out = self.fc(out)                                            # ^ included in line above
 #         return out
 
                                     #Checkpoint functions
@@ -313,36 +338,20 @@ class NN(nn.Module):
 # print(model(x).shape)
 
 
-
-                                    # Hyperparameters
-                                        # General HyperPs
-num_epochs = 1                              # value represents how many times the loop runs to train the model on the same dataset)
-num_classes = 10
-learning_rate = .001
-                                        # FC HyperPs
-input_size = 784                            # value represents pixels*pixels
-                                        # CNN HyperPs
-# in_channels = 1                             # value represents amount of colors in image
-                                        # RNN HyperPs
-# input_size = 28
-# sequence_length = 28
-# num_layers = 2
-# hidden_size = 256
-
-
                                     # create model, set Optimizer and Loss function
                                         #torch.torchvision.prebuilt_model_name(arg, arg, arg) contains alot of prebuilt NN structures
 
-model = NN(input_size=input_size, num_classes=num_classes).to(device)        # FC NN
-# model = CNN().to(device)                                                   # CNN
+# model = NN(input_size=input_size, num_classes=num_classes).to(device)        # FC NN
+model = CNN().to(device)                                                     # CNN
 # model = RNN(input_size, hidden_size, num_layers, num_classes).to(device)   # RNN
+total_params = sum(p.numel() for p in model.parameters())
 
                                         # Same for all
 criterion = nn.CrossEntropyLoss()                       # This line already contains, softmax, and negative log likelyhood
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=.1, patience=5, verbose=True)
                                         # For testing your NN on a single batch, add this line, and remove the (in enumerate) loop in the training loop.
-data, targets = next(iter(train_loader))                # This line is for testing your NN on a single batch, you also comment out the for loop in the training loop, and "de-dent" the following lines
+# data, targets = next(iter(train_loader))                # This line is for testing your NN on a single batch, you also comment out the for loop in the training loop, and "de-dent" the following lines
 
                                     # NN Training loop
 for epoch in range(num_epochs):
@@ -357,7 +366,7 @@ for epoch in range(num_epochs):
         targets = targets.to(device=device)
         data = data.to(device=device)               # FC NN and CNN specific
         # data = data.to(device=device).squeeze(1)  # RNN specific
-        data = data.reshape(data.shape[0],-1)       # FC NN specific      # reshapes the 28,28 into a 784, by "squeezing" to a flat tensor
+        # data = data.reshape(data.shape[0],-1)       # FC NN specific      # reshapes the 28,28 into a 784, by "squeezing" to a flat tensor
 
             # forward function
         scores = model(data)
@@ -367,14 +376,14 @@ for epoch in range(num_epochs):
             # backward function
         optimizer.zero_grad()                                             # this line tells the network to sum the gradient of each batch, individually, then add it to the total, much higher accuracy this way
         loss.backward()
-        # torch.nn.utils.clip_grad_norm(model.parameters(), max_norm=1)   # this line works well with RNNs
+        # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1)   # this line works well with RNNs
 
             # gradient descent function
         optimizer.step()
 
             # progress bar updates
-        loop.set_description(f'Epoch [{epoch}/{num_epochs}]')
-        loop.set_postfix(loss = loss.item(), acc=torch.rand(1).item()) # The accuracy here is set to random right now
+        loop.set_description(f'Epoch [{epoch+1}/{num_epochs}]')
+        loop.set_postfix(loss = loss.item(), acc='place_holder') # The accuracy here is set to random right now
 
         #mean_loss = sum(losses)/len(losses)
         #scheduler.step(mean_loss)
@@ -382,35 +391,35 @@ for epoch in range(num_epochs):
 
 
 # Check Accuracy
-def check_accuracy(loader, model):
-    if loader.dataset.train:
-        print('Checking accuracy on train set')
-    else:
-        print('Checking accuracy on test set')
-    num_correct = 0
-    num_samples = 0
-    model.eval()
-
-    with torch.no_grad():
-        for x, y in loader:
-            x = x.to(device=device)#.squeeze(1)               # .squeeze(1) is all RNNs specific
-            y = y.to(device=device)
-            x = x.reshape(x.shape[0], -1)                  # FC NN specific
-
-            scores = model(x)
-            _, predictions = scores.max(1)
-            num_correct += (predictions == y).sum()
-            num_samples += predictions.size(0)
-        print(f'Got {num_correct} / {num_samples} with accuracy of {float(num_correct)/float(num_samples)*100:.2f}')
-    model.train(x)
-
-
-
 with open("nn_tests_output.txt", "a") as output_file:
+    print(f'{nn_name}, Batch Size: {batch_size}, Epochs: {num_epochs}, Normalized: {normalized}, Parameters: {total_params}, Extra config: ', file = output_file)
+    def check_accuracy(loader, model):
+        if loader.dataset.train:
+            print('Checking accuracy on train set')
+        else:
+            print('Checking accuracy on test set')
+        num_correct = 0
+        num_samples = 0
+        model.eval()
+
+        with torch.no_grad():
+            for x, y in loader:
+                x = x.to(device=device)#.squeeze(1)               # .squeeze(1) is all RNNs specific
+                y = y.to(device=device)
+                # x = x.reshape(x.shape[0], -1)                  # FC NN specific
+
+                scores = model(x)
+                _, predictions = scores.max(1)
+                num_correct += (predictions == y).sum()
+                num_samples += predictions.size(0)
+            print(f'Got {num_correct} / {num_samples} with accuracy of {float(num_correct)/float(num_samples)*100:.2f}', file=output_file)
+        model.train(x)
+
     check_accuracy(train_loader, model),
     check_accuracy(test_loader, model),
     end = timer()
-    print(f'Time taken: {end-start:.1f} Seconds')
+    print(f'Time taken: {end-start:.1f} Seconds', file=output_file)
+    print('-------------------------------------------------------------------', file=output_file)
 
 
 # all these things, batch size, number of epochs, number of layers, have an effect on accuracy,
