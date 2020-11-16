@@ -203,29 +203,32 @@ torch.backends.cudnn.benchmark = False
                                                         # For CNN, use input_channel=1
                                                         # For RNN, I consider it 28 time stamps, by 28 features, usually you wouldnt use an RNN for images though.
 batch_size = 1024
-train_dataset = datasets.MNIST(root='dataset/', train=True, transform=transforms.ToTensor(), download=True)
-test_dataset = datasets.MNIST(root='dataset/', train=False, transform=transforms.ToTensor(), download=True)
+
+my_transforms = transforms.Compose([                                 # create list of data transforms
+                    transforms.ToTensor(),
+                    transforms.Normalize(mean=(.286), std=(.353))])    # This step increases accuracy of the majority of datasets, even MNIST)
+
+train_dataset = datasets.FashionMNIST(root='fashion_dataset/', train=True, transform=my_transforms, download=True)
+test_dataset = datasets.FashionMNIST(root='fashion_dataset/', train=False, transform=my_transforms, download=True)
 
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=True)
 
-# my_transforms = transforms.Compose([                                 # create list of data transforms
-#                     transforms.ToTensor(),
-#                     transforms.Normalize(mean=(.55), std=(1.2))])    # This step increases accuracy of the majority of datasets, even MNIST)
 
-def get_mean_std(loader):
-    channels_sum, channels_squared_sum, num_batches = 0, 0, 0
-    for data, _ in loader:
-        channels_sum += torch.mean(data, dim=[0,2,3])
-        channels_squared_sum += torch.mean(data**2, dim=[0,2,3])
-        num_batches += 1
-    mean = channels_sum/num_batches
-    std = (channels_squared_sum/num_batches - mean**2)**0.5
-    return mean, std
 
-mean, std = get_mean_std(train_loader)
-print(mean)
-print(std)
+# def get_mean_std(loader):
+#     channels_sum, channels_squared_sum, num_batches = 0, 0, 0
+#     for data, _ in loader:
+#         channels_sum += torch.mean(data, dim=[0,2,3])
+#         channels_squared_sum += torch.mean(data**2, dim=[0,2,3])
+#         num_batches += 1
+#     mean = channels_sum/num_batches
+#     std = (channels_squared_sum/num_batches - mean**2)**0.5
+#     return mean, std
+#
+# mean, std = get_mean_std(train_loader)
+# print(mean)
+# print(std)
 
                                     #General notes about NN types:
                                         # RNN is the umbrella term, more specific types are gru's, and LSTMs, this RNN code can be very simply converted to these types by just changing "RNN" to "GRU" in the layer type. Then you can change the layer name in the NN function in 2 places as well.
@@ -282,19 +285,19 @@ class NN(nn.Module):
 #         return out
 
                                     #Checkpoint functions
-def save_checkpoint(state, filename="my_checkpoint.pt"):             # this will overwrite the file, so for multiple runs, youll want to change this function slightly, or use a new file.
-    print("-> Saving Checkpoint")
-    torch.save(state, filename)
-
-def load_checkpoint(checkpoint):
-    print("-> Loading Checkpoint")
-    model.load_state_dict(checkpoint['state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer'])
-
-load_model = False                          # for saving results to build on later, cant set to true, until I have loaded data in the file already
-
-if load_model:
-    load_checkpoint(torch.load("my_checkpoint.pth.tar"))
+# def save_checkpoint(state, filename="my_checkpoint.pt"):             # this will overwrite the file, so for multiple runs, youll want to change this function slightly, or use a new file.
+#     print("-> Saving Checkpoint")
+#     torch.save(state, filename)
+#
+# def load_checkpoint(checkpoint):
+#     print("-> Loading Checkpoint")
+#     model.load_state_dict(checkpoint['state_dict'])
+#     optimizer.load_state_dict(checkpoint['optimizer'])
+#
+# load_model = False                          # for saving results to build on later, cant set to true, until I have loaded data in the file already
+#
+# if load_model:
+#     load_checkpoint(torch.load("my_checkpoint.pth.tar"))
 
                                     #Loading a pre-trained model
 
@@ -313,7 +316,7 @@ if load_model:
 
                                     # Hyperparameters
                                         # General HyperPs
-num_epochs = 4                              # value represents how many times the loop runs to train the model on the same dataset)
+num_epochs = 1                              # value represents how many times the loop runs to train the model on the same dataset)
 num_classes = 10
 learning_rate = .001
                                         # FC HyperPs
@@ -337,7 +340,7 @@ model = NN(input_size=input_size, num_classes=num_classes).to(device)        # F
                                         # Same for all
 criterion = nn.CrossEntropyLoss()                       # This line already contains, softmax, and negative log likelyhood
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=.1, patience=5, verbose=True)
+#scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=.1, patience=5, verbose=True)
                                         # For testing your NN on a single batch, add this line, and remove the (in enumerate) loop in the training loop.
 data, targets = next(iter(train_loader))                # This line is for testing your NN on a single batch, you also comment out the for loop in the training loop, and "de-dent" the following lines
 
@@ -345,9 +348,9 @@ data, targets = next(iter(train_loader))                # This line is for testi
 for epoch in range(num_epochs):
     losses = []
                                         # part of the save and load function
-    if epoch % 2:
-        checkpoint = {'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict()}
-        save_checkpoint(checkpoint)
+    # if epoch % 2:
+    #     checkpoint = {'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict()}
+    #     save_checkpoint(checkpoint)
     loop = tqdm(enumerate(train_loader), total=len(train_loader), leave=False)
     for batch_idx, (data, targets) in loop:                # this is the loop that iterates over all batches, and the in enumerate part gives the index for each epoch
             # Put data in Cuda if possible
@@ -359,7 +362,7 @@ for epoch in range(num_epochs):
             # forward function
         scores = model(data)
         loss = criterion(scores, targets)
-        losses.append(loss.item())                         # for use in calculating the loss per epoch
+        #losses.append(loss.item())                         # for use in calculating the loss per epoch
 
             # backward function
         optimizer.zero_grad()                                             # this line tells the network to sum the gradient of each batch, individually, then add it to the total, much higher accuracy this way
@@ -373,9 +376,9 @@ for epoch in range(num_epochs):
         loop.set_description(f'Epoch [{epoch}/{num_epochs}]')
         loop.set_postfix(loss = loss.item(), acc=torch.rand(1).item()) # The accuracy here is set to random right now
 
-        mean_loss = sum(losses)/len(losses)
-        scheduler.step(mean_loss)
-        print(f'Loss at epoch {epoch} is {mean_loss}')
+        #mean_loss = sum(losses)/len(losses)
+        #scheduler.step(mean_loss)
+        #print(f'Loss at epoch {epoch} is {mean_loss}')
 
 
 # Check Accuracy
@@ -401,11 +404,13 @@ def check_accuracy(loader, model):
         print(f'Got {num_correct} / {num_samples} with accuracy of {float(num_correct)/float(num_samples)*100:.2f}')
     model.train(x)
 
-check_accuracy(train_loader, model)
-check_accuracy(test_loader, model)
 
-end = timer()
-print(f'Time taken: {end-start:.1f} Seconds')
+
+with open("nn_tests_output.txt", "a") as output_file:
+    check_accuracy(train_loader, model),
+    check_accuracy(test_loader, model),
+    end = timer()
+    print(f'Time taken: {end-start:.1f} Seconds')
 
 
 # all these things, batch size, number of epochs, number of layers, have an effect on accuracy,
