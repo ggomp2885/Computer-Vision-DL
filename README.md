@@ -1,2 +1,2 @@
 # Pytorch-Exploration
-This repo is for my explorations and hands on experience using Pytorch in Python
+Complete Computer Vision CNNs and Time Series RNN algorithms on the MNIST and FashionMNIST datasets
