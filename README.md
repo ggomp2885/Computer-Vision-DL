@@ -2,7 +2,7 @@
 Complete Computer Vision CNNs and Time Series RNN algorithms on the MNIST and FashionMNIST datasets
 
 ## Files and Folders
-This repo contains two folders containing the MNIST, and FASHIONMNIST datasets
+2 folders containing the MNIST, and FASHIONMNIST datasets
 
 2 checkpoint files for saving results of models after a set number of Epochs
 
