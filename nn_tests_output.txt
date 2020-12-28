@@ -56,3 +56,8 @@ Got 45887 / 60000 with accuracy of 76.48
 Got 7565 / 10000 with accuracy of 75.65
 Time taken: 36.3 Seconds
 -------------------------------------------------------------------
+CNN, Batch Size: 1024, Epochs: 1, Normalized: True, Parameters: 9098, Extra config: 
+Got 45887 / 60000 with accuracy of 76.48
+Got 7565 / 10000 with accuracy of 75.65
+Time taken: 47.2 Seconds
+-------------------------------------------------------------------
