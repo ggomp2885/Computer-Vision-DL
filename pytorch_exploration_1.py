@@ -96,9 +96,9 @@
 #     var_name = F.act_func(self.lay_name3(var_name1))
 #     var_name = self.lay_name4(var_name1)  ## this may be unnecessary
 #     return F.loss_func(var_name1, dim=1)
-# 
+#
 # opt_var_name = optim.Adam(net.parameters(), lr=0.001)
-# 
+#
 # EPOCHS = 3
 # for epoch in range(EPOCHS):
 #     for data in trainset:
@@ -108,7 +108,7 @@
 #         loss_var_name = F.loss_func_name(output, y)
 #         loss_var_name.backward()
 #         opt_var_name.step()
-# 
+#
                     # measuring accuracy
 # Correct = 0
 # Total = 0
@@ -268,7 +268,7 @@ in_channels = 1                                             # value represents a
 #         x = self.fc2(x)
 #         return x
 
-                                    # Create simple Convolutional NN
+                                    # Create simple Convolutional NN 
 
 nn_name = 'CNN'
 class CNN(nn.Module):
