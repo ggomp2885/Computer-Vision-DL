@@ -378,7 +378,7 @@ for epoch in range(num_epochs):
         loss.backward()
         # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1)   # this line works well with RNNs
 
-            # gradient descent function
+            # feature adjustments step function
         optimizer.step()
 
             # progress bar updates
