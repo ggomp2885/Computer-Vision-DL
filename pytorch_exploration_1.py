@@ -268,7 +268,7 @@ in_channels = 1                                             # value represents a
 #         x = self.fc2(x)
 #         return x
 
-                                    # Create simple Convolutional NN  
+                                    #  Create simple Convolutional NN  
 
 nn_name = 'CNN'
 class CNN(nn.Module):
