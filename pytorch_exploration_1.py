@@ -52,7 +52,7 @@
 # tens_name[:,#]                        # returns entire column
 # tens_name[(tens_name > # | tens_name < #    # returns elements above OR below these #s, can also use the & sign here
 
-                                # Basic Tensor Math Operations
+                                # Basic Tensor Math Operations 
                                     # I can add a _ after any of these functions to do these operations, "in place," which takes less time and memory
                                     # broadcasting is a built-in feature for ease of use which allows you to do operations between tensors of different sizes
                                     # in each of these parenthesis, you can also specify dim=#, to just do the operation on a specific row. When specifying an axis, the index returned is relative to that axis.
@@ -288,7 +288,7 @@ class CNN(nn.Module):
         x = self.fc1(x)
         return x
                                     #  Create simple Recurrent NN - currently setup for normal LSTM, can be setup for a bidirectional LSTM, and a GRU
-                                        # a Bi-directional LSTM, is nearly the same as a normal LSTM, simply replace variable names for ease of understanding and change 3 things, set bidirectional=True and multiply hidden_size*2 and num_layers*2 
+                                        # a Bi-directional LSTM, is nearly the same as a normal LSTM, simply replace variable names for ease of understanding and change 3 things, set bidirectional=True and multiply hidden_size*2 and num_layers*2
 # nn_name = 'RNN'
 # class RNN(nn.Module):
 #     def __init__(self, input_size, hidden_size, num_layers, num_classes):
