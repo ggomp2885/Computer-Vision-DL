@@ -52,7 +52,7 @@
 # tens_name[:,#]                        # returns entire column
 # tens_name[(tens_name > # | tens_name < #    # returns elements above OR below these #s, can also use the & sign here
 
-                                # Basic Tensor Math Operations 
+                                # Basic Tensor Math Operations
                                     # I can add a _ after any of these functions to do these operations, "in place," which takes less time and memory
                                     # broadcasting is a built-in feature for ease of use which allows you to do operations between tensors of different sizes
                                     # in each of these parenthesis, you can also specify dim=#, to just do the operation on a specific row. When specifying an axis, the index returned is relative to that axis.
