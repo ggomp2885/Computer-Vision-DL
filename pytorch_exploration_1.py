@@ -123,7 +123,7 @@
 #        print(“Accuracy “, round(correct / total, 3))
 
 
-                                            # EXAMPLE CODE OF BASIC FUNCTIONS -- All confirmed working 11/11/20  
+                                            # EXAMPLE CODE OF BASIC FUNCTIONS -- All confirmed working 11/11/20
 
 # import numpy as np
 # import torch
@@ -209,7 +209,7 @@ torch.backends.cudnn.benchmark = False
                                                         # For FCNN, load as above
                                                         # For CNN, use input_channel=1
                                                         # For RNN, I consider it 28 time stamps, by 28 features, usually you wouldnt use an RNN for images though.
-my_transforms = transforms.Compose([                                 # create list of data transforms
+my_transforms = transforms.Compose([                                 # create list of data transforms 
                     transforms.ToTensor(),
                     transforms.Normalize(mean=(.2860), std=(.3530))])    # This step increases accuracy of the majority of datasets, even MNIST)
 normalized = True
