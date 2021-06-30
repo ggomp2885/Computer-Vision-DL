@@ -123,7 +123,7 @@
 #        print(“Accuracy “, round(correct / total, 3))
 
 
-                                            # EXAMPLE CODE OF BASIC FUNCTIONS -- All confirmed working 11/11/20
+                                            # EXAMPLE CODE OF BASIC FUNCTIONS -- All confirmed working 11/11/20  
 
 # import numpy as np
 # import torch
