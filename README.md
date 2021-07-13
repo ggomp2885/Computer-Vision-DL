@@ -1,6 +1,11 @@
 # Pytorch-Exploration
 Complete Computer Vision CNNs and Time Series RNN algorithms on the MNIST and FashionMNIST datasets
 
+
+To start exploring:
+
+Open the "Object_Recognition" .ipynb file to explore some of work building and using CNN architectures and the other .ipynb files in this main folder
+
 ## Files and Folders
 2 folders containing the MNIST, and FASHIONMNIST datasets
 
